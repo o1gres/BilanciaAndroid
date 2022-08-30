@@ -14,8 +14,21 @@ import android.widget.TextView;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.weight.scale.databinding.FragmentSecondBinding;
+import com.weight.scale.utils.Utils;
+
+import org.eclipse.paho.android.service.MqttAndroidClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +38,15 @@ public class SecondFragment extends Fragment {
 
     private FragmentSecondBinding binding;
 
+    MqttAndroidClient mqttAndroidClient;
+
+    Utils utils = new Utils();
+
     TextView testTextView;
+    TextView WeightSize;
+
+    final String serverUri = "tcp://broker.hivemq.com:1883";
+
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container,
@@ -39,9 +60,43 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         testTextView = (TextView) view.findViewById(R.id.textview_second);
-        testTextView.setText(readFromFile(getContext()));
+        WeightSize   = (TextView) view.findViewById(R.id.WeightSize);
+        String appCode = utils.readFromFile(getContext());
+        Log.i("APPCODE","appcode: "+appCode);
+        testTextView.setText(appCode.trim());
+
+        //MQTT CONNECTION
+        mqttAndroidClient = new MqttAndroidClient(getContext(), serverUri, appCode.trim());
+
+        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+        mqttConnectOptions.setAutomaticReconnect(true);
+        mqttConnectOptions.setCleanSession(false);
+
+        try
+        {
+            mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener()
+            {
+
+                @Override
+                public void onSuccess(IMqttToken asyncActionToken) {
+                    Log.i("Main","Connected correctly");
+                    subscribeTopic (appCode.trim());
+                }
+
+                @Override
+                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                    exception.printStackTrace();
+                }
+            });
+        }
+        catch (MqttException e)
+        {
+            Log.d("ERR", "Errore MQTT connect:" +e);
+        }
+
+
+
 
     }
 
@@ -51,34 +106,50 @@ public class SecondFragment extends Fragment {
         binding = null;
     }
 
-    private String readFromFile(Context context) {
 
-        String ret = "";
-
+    public void subscribeTopic(String topic) {
         try {
-            InputStream inputStream = context.openFileInput("configCodeScale.txt");
+            if (mqttAndroidClient.isConnected()) {
+                mqttAndroidClient.subscribe(topic, 0, null, new IMqttActionListener() {
+                    @Override
+                    public void onSuccess(IMqttToken asyncActionToken) {
+                        Log.i("MQTTSUB", "subscribed succeed");
+                        if (mqttAndroidClient.isConnected()) {
+                            receiveMqttMessages();
+                        }
+                    }
 
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append("\n").append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
+                    @Override
+                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+                        Log.i("MQTTSUB", "subscribed failed");
+                    }
+                });
             }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
 
-        return ret;
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void receiveMqttMessages()
+    {
+        mqttAndroidClient.setCallback(new MqttCallback() {
+            @Override
+            public void connectionLost(Throwable cause) {
+
+            }
+
+            @Override
+            public void messageArrived(String topic, MqttMessage message) throws Exception {
+                Log.i("BBB", "received message: "+message.toString());
+                WeightSize.setText(message.toString());
+            }
+
+            @Override
+            public void deliveryComplete(IMqttDeliveryToken token) {
+
+            }
+        });
     }
 
 }

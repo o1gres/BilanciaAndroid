@@ -2,6 +2,8 @@ package com.weight.scale;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.DebugUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +16,25 @@ import android.widget.EditText;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.weight.scale.databinding.FragmentFirstBinding;
+import com.weight.scale.utils.*;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 public class FirstFragment extends Fragment {
 
     private FragmentFirstBinding binding;
+
+    Utils utils = new Utils();
 
     EditText edittext_scale_code;
 
@@ -34,6 +48,8 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
+
         edittext_scale_code = (EditText) view.findViewById(R.id.edittext_scale_code);
 
         binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
@@ -46,6 +62,15 @@ public class FirstFragment extends Fragment {
                         .navigate(R.id.action_FirstFragment_to_SecondFragment);
             }
         });
+
+
+        if (null != utils.readFromFile(getContext()))
+        {
+            Log.i("FRAG1","Show frag 2");
+            NavHostFragment.findNavController(FirstFragment.this)
+                    .navigate(R.id.action_FirstFragment_to_SecondFragment);
+        }
+
     }
 
     @Override
@@ -56,15 +81,32 @@ public class FirstFragment extends Fragment {
 
     private void writeCodeToFile(String data, Context context) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("configCodeScale.txt", Context.MODE_PRIVATE));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
-            Log.e("Fragment1", "File write correctly ");
+
+            File file = new File(context.getFilesDir(),utils.FILE_PATH);
+
+            // If file doesn't exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+
+            // Write in file
+            bw.write(data);
+
+            // Close connection
+            bw.close();
+
+            Log.i("Fragment1", "File write correctly ");
 
         }
         catch (IOException e) {
             Log.e("Exception", "File write failed: " + e.toString());
         }
     }
+
+
+
 
 }

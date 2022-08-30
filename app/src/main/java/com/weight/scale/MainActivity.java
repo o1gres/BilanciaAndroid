@@ -27,18 +27,6 @@ public class MainActivity extends AppCompatActivity {
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
 
-    //MQTT
-    MqttAndroidClient mqttAndroidClient;
-
-    final String serverUri = "broker.hivemq.com:1883";
-    //final String MQTTUserName = "sergio";
-    //final String MQTTPassword = "grazieSergi0";
-
-    String clientId = "ClientColor";
-    final String subscriptionTopic = "SergioRaspberryLedResponse";    //Risposta dal server MQTT all'invio del codice colore
-    final String publishTopic = "SergioRaspberryLed";          //Richiesta del colore da parte dell'app (invia il codice esadecimale del colore richiesto)
-    final String publishMessage = null;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,37 +48,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
-
-
-        //MQTT
-        mqttAndroidClient = new MqttAndroidClient(getApplicationContext(), serverUri, clientId);
-
-        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setAutomaticReconnect(true);
-        mqttConnectOptions.setCleanSession(false);
-
-
-        try
-        {
-            mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener()
-            {
-
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.i("Main","Connected correctly");
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    exception.printStackTrace();
-                }
-            });
-        }
-        catch (MqttException e)
-        {
-            Log.d("ERR", "Errore MQTT connect:" +e);
-        }
 
 
     }
@@ -124,8 +81,4 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-
-    public MqttAndroidClient getMqttAndroidClient() {
-        return mqttAndroidClient;
-    }
 }
