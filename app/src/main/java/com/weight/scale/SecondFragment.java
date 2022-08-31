@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.navigation.fragment.NavHostFragment;
@@ -25,6 +26,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,6 +46,10 @@ public class SecondFragment extends Fragment {
 
     TextView testTextView;
     TextView WeightSize;
+    TextView gasSize;
+
+    ImageView minus;
+    ImageView plus;
 
     final String serverUri = "tcp://broker.hivemq.com:1883";
 
@@ -62,6 +68,10 @@ public class SecondFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         testTextView = (TextView) view.findViewById(R.id.textview_second);
         WeightSize   = (TextView) view.findViewById(R.id.WeightSize);
+        gasSize      = (TextView) view.findViewById(R.id.readGasSize);
+
+        minus        = (ImageView) view.findViewById(R.id.minus);
+        plus        = (ImageView) view.findViewById(R.id.plus);
         String appCode = utils.readFromFile(getContext());
         Log.i("APPCODE","appcode: "+appCode);
         testTextView.setText(appCode.trim());
@@ -96,7 +106,19 @@ public class SecondFragment extends Fragment {
         }
 
 
+        minus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                minusButton(view);
+            }
+        });
 
+        plus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                plusButton(view);
+            }
+        });
 
     }
 
@@ -150,6 +172,26 @@ public class SecondFragment extends Fragment {
 
             }
         });
+    }
+
+
+    public void minusButton(View v) {
+
+        String previousGasSize = gasSize.getText().toString();
+        Integer previousGasSizeInt = Integer.parseInt(previousGasSize);
+        if (previousGasSizeInt >5) {
+            String newGasSize = String.valueOf(previousGasSizeInt - 5);
+            gasSize.setText(newGasSize);
+        }
+    }
+
+    public void plusButton(View v) {
+        String previousGasSize = gasSize.getText().toString();
+        Integer previousGasSizeInt = Integer.parseInt(previousGasSize);
+        if (previousGasSizeInt < 20) {
+            String newGasSize = String.valueOf(previousGasSizeInt + 5);
+            gasSize.setText(newGasSize);
+        }
     }
 
 }
