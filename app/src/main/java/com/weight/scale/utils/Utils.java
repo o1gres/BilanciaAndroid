@@ -1,7 +1,9 @@
 package com.weight.scale.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -59,5 +61,19 @@ public class Utils {
         }
 
         return ret;
+    }
+
+
+    public void deleteFile(Context context, Activity activity)
+    {
+        File file = new File(context.getFilesDir(),FILE_PATH);
+        if(file.exists()) {
+            if(file.delete()) {
+                Toast.makeText(activity, "File deleted ", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(activity, "Impossible delete file ", Toast.LENGTH_SHORT).show();
+            }
+        }
+
     }
 }

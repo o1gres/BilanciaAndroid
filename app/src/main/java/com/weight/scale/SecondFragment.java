@@ -1,9 +1,12 @@
 package com.weight.scale;
 
-import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -11,10 +14,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.Navigation;
 
+import com.google.gson.Gson;
 import com.weight.scale.databinding.FragmentSecondBinding;
+import com.weight.scale.gson.GasData;
 import com.weight.scale.utils.Utils;
 
 import org.eclipse.paho.android.service.MqttAndroidClient;
@@ -22,36 +28,63 @@ import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.w3c.dom.Text;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 public class SecondFragment extends Fragment {
 
     private FragmentSecondBinding binding;
 
+    final String serverUri = "tcp://broker.hivemq.com:1883";
+
     MqttAndroidClient mqttAndroidClient;
 
-    Utils utils = new Utils();
+    Utils utils     = new Utils();
+    GasData gasData = new GasData();
+    Gson gson       = new Gson();
 
     TextView testTextView;
-    TextView WeightSize;
+    TextView weightSize;
+    TextView percentageSize;
     TextView gasSize;
 
     ImageView minus;
     ImageView plus;
 
-    final String serverUri = "tcp://broker.hivemq.com:1883";
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        Log.i("AAA","item: "+item.getTitle());
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            Toast.makeText(getActivity(), "called " + item.getItemId(), Toast.LENGTH_SHORT).show();
+            utils.deleteFile(getContext(),getActivity());
+            Navigation.findNavController(getView())
+                    .navigate(R.id.action_SecondFragment_to_FirstFragment);
+
+
+            return true;
+        }
+
+        Toast.makeText(getActivity(), "called " + item.getItemId(), Toast.LENGTH_SHORT).show();
+        return super.onOptionsItemSelected(item);
+
+       // return false;
+    }
 
     @Override
     public View onCreateView(
@@ -66,9 +99,10 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        testTextView = (TextView) view.findViewById(R.id.textview_second);
-        WeightSize   = (TextView) view.findViewById(R.id.WeightSize);
-        gasSize      = (TextView) view.findViewById(R.id.readGasSize);
+        testTextView    = (TextView) view.findViewById(R.id.textview_second);
+        weightSize      = (TextView) view.findViewById(R.id.WeightSize);
+        percentageSize  = (TextView) view.findViewById(R.id.PercentageSize);
+        gasSize         = (TextView) view.findViewById(R.id.readGasSize);
 
         minus        = (ImageView) view.findViewById(R.id.minus);
         plus        = (ImageView) view.findViewById(R.id.plus);
@@ -162,9 +196,28 @@ public class SecondFragment extends Fragment {
             }
 
             @Override
-            public void messageArrived(String topic, MqttMessage message) throws Exception {
-                Log.i("BBB", "received message: "+message.toString());
-                WeightSize.setText(message.toString());
+            public void messageArrived(String topic, MqttMessage message) {
+                try {
+
+                    GasData aaa = new GasData();
+                    aaa.setPercentage(20);
+                    aaa.setSettedSize(21);
+                    aaa.setWeight(22);
+                    aaa.setTime("01:02:03");
+
+                    Log.i("CCC","CCC: "+gson.toJson(aaa));
+
+                    String arrivedMessage = message.toString();
+                    Log.i("BBB", "received message: " + arrivedMessage);
+                    gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
+                    weightSize.setText(gasData.getWeight());
+                    percentageSize.setText(gasData.getPercentage());
+                    gasSize.setText(gasData.getSettedSize());
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
             }
 
             @Override
