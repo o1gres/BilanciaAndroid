@@ -210,9 +210,9 @@ public class SecondFragment extends Fragment {
                     String arrivedMessage = message.toString();
                     Log.i("BBB", "received message: " + arrivedMessage);
                     gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
-                    weightSize.setText(gasData.getWeight());
-                    percentageSize.setText(gasData.getPercentage());
-                    gasSize.setText(gasData.getSettedSize());
+                    weightSize.setText(gasData.getWeight().toString());
+                    percentageSize.setText(gasData.getPercentage().toString());
+                    gasSize.setText(gasData.getSettedSize().toString());
                 }
                 catch (Exception e)
                 {
