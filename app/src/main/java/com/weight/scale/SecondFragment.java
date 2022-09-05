@@ -238,6 +238,7 @@ public class SecondFragment extends Fragment {
         if (previousGasSizeInt < 20) {
             String newGasSize = String.valueOf(previousGasSizeInt + 5);
             gasSize.setText(newGasSize);
+            publishMessage(newGasSize, Utils.TOPIC_SET_BOTTLE_SIZE);
         }
     }
 
