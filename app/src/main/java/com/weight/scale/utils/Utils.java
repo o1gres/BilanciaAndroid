@@ -22,7 +22,9 @@ public class Utils {
         //Empty constructor
     }
 
-    public final static String FILE_PATH = "configCodeScale4.txt";
+    public final static String FILE_PATH = "configCodeScale0.txt";
+
+    public final static String TOPIC_SET_BOTTLE_SIZE = "set_bottle_size";
 
     public String readFromFile(Context context) {
 

@@ -32,6 +32,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import java.nio.charset.StandardCharsets;
+
 public class SecondFragment extends Fragment {
 
     private FragmentSecondBinding binding;
@@ -44,9 +46,9 @@ public class SecondFragment extends Fragment {
     GasData gasData = new GasData();
     Gson gson       = new Gson();
 
-    TextView testTextView;
     TextView weightSize;
     TextView percentageSize;
+    TextView setSize;
     TextView gasSize;
 
     ImageView minus;
@@ -99,16 +101,16 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        testTextView    = (TextView) view.findViewById(R.id.textview_second);
         weightSize      = (TextView) view.findViewById(R.id.WeightSize);
         percentageSize  = (TextView) view.findViewById(R.id.PercentageSize);
+        setSize         = (TextView) view.findViewById(R.id.SetSize);
         gasSize         = (TextView) view.findViewById(R.id.readGasSize);
+        minus           = (ImageView) view.findViewById(R.id.minus);
+        plus            = (ImageView) view.findViewById(R.id.plus);
 
-        minus        = (ImageView) view.findViewById(R.id.minus);
-        plus        = (ImageView) view.findViewById(R.id.plus);
+
         String appCode = utils.readFromFile(getContext());
         Log.i("APPCODE","appcode: "+appCode);
-        testTextView.setText(appCode.trim());
 
         //MQTT CONNECTION
         mqttAndroidClient = new MqttAndroidClient(getContext(), serverUri, appCode.trim());
@@ -198,21 +200,12 @@ public class SecondFragment extends Fragment {
             @Override
             public void messageArrived(String topic, MqttMessage message) {
                 try {
-
-                    GasData aaa = new GasData();
-                    aaa.setPercentage(20);
-                    aaa.setSettedSize(21);
-                    aaa.setWeight(22);
-                    aaa.setTime("01:02:03");
-
-                    Log.i("CCC","CCC: "+gson.toJson(aaa));
-
                     String arrivedMessage = message.toString();
                     Log.i("BBB", "received message: " + arrivedMessage);
                     gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
                     weightSize.setText(gasData.getWeight().toString());
                     percentageSize.setText(gasData.getPercentage().toString());
-                    gasSize.setText(gasData.getSettedSize().toString());
+                    setSize.setText(gasData.getSettedSize().toString());
                 }
                 catch (Exception e)
                 {
@@ -235,6 +228,7 @@ public class SecondFragment extends Fragment {
         if (previousGasSizeInt >5) {
             String newGasSize = String.valueOf(previousGasSizeInt - 5);
             gasSize.setText(newGasSize);
+            publishMessage(newGasSize, Utils.TOPIC_SET_BOTTLE_SIZE);
         }
     }
 
@@ -244,6 +238,20 @@ public class SecondFragment extends Fragment {
         if (previousGasSizeInt < 20) {
             String newGasSize = String.valueOf(previousGasSizeInt + 5);
             gasSize.setText(newGasSize);
+        }
+    }
+
+
+    private void publishMessage(String message, String topic) {
+        try{
+            MqttMessage mqttMessage = new MqttMessage();
+            mqttMessage.setId(1);
+            mqttMessage.setPayload(message.getBytes(StandardCharsets.UTF_8));
+            mqttMessage.setQos(0);
+            mqttMessage.setRetained(true);
+            mqttAndroidClient.publish(topic, mqttMessage);
+        } catch (Exception e) {
+            Log.e("MQTT", "Error publishing message: "+e);
         }
     }
 
