@@ -14,5 +14,5 @@
     <!-- Fragment two -->
     <string name="textview_weight_title">Weight</string>
     <string name="textview_percentage_title">Percentage</string>
-    <string name="set_size">Actual set bottle size</string>
+    <string name="set_size">Actual size</string>
 </resources>
