@@ -23,7 +23,8 @@ import com.weight.scale.databinding.FragmentSecondBinding;
 import com.weight.scale.gson.GasData;
 import com.weight.scale.utils.Utils;
 
-import org.eclipse.paho.android.service.MqttAndroidClient;
+import info.mqtt.android.service.Ack;
+import info.mqtt.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -113,7 +114,7 @@ public class SecondFragment extends Fragment {
         Log.i("APPCODE","appcode: "+appCode);
 
         //MQTT CONNECTION
-        mqttAndroidClient = new MqttAndroidClient(getContext(), serverUri, appCode.trim());
+        mqttAndroidClient = new MqttAndroidClient(getContext(), serverUri, appCode.trim(), Ack.AUTO_ACK);
 
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
         mqttConnectOptions.setAutomaticReconnect(true);
@@ -136,7 +137,7 @@ public class SecondFragment extends Fragment {
                 }
             });
         }
-        catch (MqttException e)
+        catch (Exception e)
         {
             Log.d("ERR", "Errore MQTT connect:" +e);
         }
@@ -184,7 +185,7 @@ public class SecondFragment extends Fragment {
                 });
             }
 
-        } catch (MqttException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
