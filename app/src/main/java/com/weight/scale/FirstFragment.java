@@ -9,10 +9,17 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.installations.FirebaseInstallations;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.weight.scale.databinding.FragmentFirstBinding;
 import com.weight.scale.utils.*;
 
@@ -29,17 +36,20 @@ public class FirstFragment extends Fragment {
 
     EditText edittext_scale_code;
 
+    Button firebase;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         binding = FragmentFirstBinding.inflate(inflater, container, false);
+
         return binding.getRoot();
     }
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-
+        firebase = (Button) view.findViewById(R.id.firebase);
 
         edittext_scale_code = (EditText) view.findViewById(R.id.edittext_scale_code);
 
@@ -55,6 +65,13 @@ public class FirstFragment extends Fragment {
         });
 
 
+        firebase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ciao();
+            }
+        });
+
         if (null != utils.readFromFile(getContext()))
         {
             Log.i("FRAG1","Show frag 2");
@@ -62,6 +79,31 @@ public class FirstFragment extends Fragment {
                     .navigate(R.id.action_FirstFragment_to_SecondFragment);
         }
 
+    }
+
+
+    public void ciao()
+    {
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(new OnCompleteListener<String>() {
+                    @Override
+                    public void onComplete(@NonNull Task<String> task) {
+                        if (!task.isSuccessful()) {
+                            Log.w("FIREBASE", "FCM registration token failed", task.getException());
+                            return;
+                        }
+
+                        // Get new FCM registration token
+                        String token = task.getResult();
+
+                        // Log and toast
+                        //String msg = getString(R.string.msg_token_fmt, token);
+                        Log.d("FIREBASE", token);
+                        Toast.makeText(getContext(), token, Toast.LENGTH_LONG).show();
+                    }
+
+
+                });
     }
 
     @Override

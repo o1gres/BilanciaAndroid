@@ -25,6 +25,8 @@ import com.weight.scale.utils.Utils;
 
 import info.mqtt.android.service.Ack;
 import info.mqtt.android.service.MqttAndroidClient;
+
+import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
@@ -33,6 +35,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class SecondFragment extends Fragment {
 
@@ -50,9 +54,12 @@ public class SecondFragment extends Fragment {
     TextView percentageSize;
     TextView setSize;
     TextView gasSize;
+    TextView updateTime;
 
     ImageView minus;
     ImageView plus;
+
+    SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy--HH:mm:ss");
 
 
     @Override
@@ -105,6 +112,7 @@ public class SecondFragment extends Fragment {
         percentageSize  = (TextView) view.findViewById(R.id.PercentageSize);
         setSize         = (TextView) view.findViewById(R.id.SetSize);
         gasSize         = (TextView) view.findViewById(R.id.readGasSize);
+        updateTime      = (TextView) view.findViewById(R.id.lastUpdateRow);
         minus           = (ImageView) view.findViewById(R.id.minus);
         plus            = (ImageView) view.findViewById(R.id.plus);
 
@@ -201,10 +209,14 @@ public class SecondFragment extends Fragment {
             public void messageArrived(String topic, MqttMessage message) {
                 try {
                     String arrivedMessage = message.toString();
-                    Log.i("BBB", "received message: " + arrivedMessage);
+                    Log.i("MQTT", "received message: " + arrivedMessage);
                     gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
                     weightSize.setText(gasData.getWeight().toString());
                     percentageSize.setText(gasData.getPercentage().toString());
+                    //From Epoch to time
+                    Date receivedDate = new Date(Long.parseLong(gasData.getTime())*1000);
+                    Date correctDate  = DateUtils.addHours(receivedDate, -1);
+                    updateTime.setText(sdf.format(correctDate));
                     setSize.setText(gasData.getSettedSize().toString());
                 }
                 catch (Exception e)

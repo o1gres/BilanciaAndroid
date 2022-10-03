@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "964800337120",
+    "project_id": "bilancia-ca882",
+    "storage_bucket": "bilancia-ca882.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:964800337120:android:f49841b5d710742c33ec85",
+        "android_client_info": {
+          "package_name": "com.weight.scale"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "964800337120-9inrbag1stnu0d60f42inuncii74ervn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMDXHhC5-z1DYGBwm458sS0n3kc0mfw8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "964800337120-9inrbag1stnu0d60f42inuncii74ervn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
