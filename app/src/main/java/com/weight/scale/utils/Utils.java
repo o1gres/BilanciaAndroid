@@ -26,6 +26,10 @@ public class Utils {
 
     public final static String TOPIC_SET_BOTTLE_SIZE = "set_bottle_size";
 
+    public final static String MQTT_USERNAME = "sergio";
+
+    public final static String MQTT_PASSWORD = "grazieSergi0";
+
     public String readFromFile(Context context) {
 
         String ret = "";

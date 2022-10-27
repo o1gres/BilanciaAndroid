@@ -1,6 +1,10 @@
 package com.weight.scale;
 
+import android.content.Intent;
 import android.os.Bundle;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
@@ -28,9 +32,12 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        startService(new Intent(this, NotificationService.class));
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -41,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
         appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
 
-
+        checkGooglePlayService();
     }
 
     @Override
@@ -73,6 +80,19 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    public void checkGooglePlayService()
+    {
+        Integer googlePlyaServiceStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        if (googlePlyaServiceStatus == ConnectionResult.SUCCESS)
+        {
+            Log.i("PLAYSERVICE", "GOOGLE PLAY SERVICE ACTIVE");
+        }
+        else
+        {
+            Log.e("PLAYSERVICE", "GOOGLE PLAY SERVICE INACTIVE");
+        }
     }
 
 }

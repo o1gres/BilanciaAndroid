@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId "com.weight.scale"
-        minSdk 21
+        minSdk 23
         targetSdk 28
         versionCode 1
         versionName "1.0"
@@ -65,7 +65,8 @@ dependencies {
     //Firebase
     implementation platform('com.google.firebase:firebase-bom:30.4.1')
     implementation 'com.google.firebase:firebase-analytics'
-    implementation group: 'com.google.firebase', name: 'firebase-messaging', version: '23.0.8'
+    implementation 'com.google.firebase:firebase-messaging:20.1.3'
+    //implementation group: 'com.google.firebase', name: 'firebase-messaging', version: '23.0.8'
 
     implementation group: 'com.google.firebase', name: 'firebase-core', version: '21.1.1'
 

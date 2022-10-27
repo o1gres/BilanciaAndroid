@@ -8,7 +8,7 @@ import com.google.firebase.messaging.RemoteMessage;
 /**
  * Created by Sergio Cordedda on 03/10/2022
  */
-class FireIDService extends FirebaseMessagingService {
+public class FireIDService extends FirebaseMessagingService {
 
 
     @Override

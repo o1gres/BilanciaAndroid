@@ -1,5 +1,10 @@
 package com.weight.scale;
 
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,13 +47,13 @@ public class SecondFragment extends Fragment {
 
     private FragmentSecondBinding binding;
 
-    final String serverUri = "tcp://broker.hivemq.com:1883";
+    final String serverUri = "tcp://developerhome.ddns.net:1883";
 
     MqttAndroidClient mqttAndroidClient;
 
-    Utils utils     = new Utils();
+    Utils utils = new Utils();
     GasData gasData = new GasData();
-    Gson gson       = new Gson();
+    Gson gson = new Gson();
 
     TextView weightSize;
     TextView percentageSize;
@@ -58,6 +63,8 @@ public class SecondFragment extends Fragment {
 
     ImageView minus;
     ImageView plus;
+
+    String appCode;
 
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy--HH:mm:ss");
 
@@ -77,11 +84,11 @@ public class SecondFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        Log.i("AAA","item: "+item.getTitle());
+        Log.i("AAA", "item: " + item.getTitle());
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Toast.makeText(getActivity(), "called " + item.getItemId(), Toast.LENGTH_SHORT).show();
-            utils.deleteFile(getContext(),getActivity());
+            utils.deleteFile(getContext(), getActivity());
             Navigation.findNavController(getView())
                     .navigate(R.id.action_SecondFragment_to_FirstFragment);
 
@@ -92,7 +99,7 @@ public class SecondFragment extends Fragment {
         Toast.makeText(getActivity(), "called " + item.getItemId(), Toast.LENGTH_SHORT).show();
         return super.onOptionsItemSelected(item);
 
-       // return false;
+        // return false;
     }
 
     @Override
@@ -108,46 +115,25 @@ public class SecondFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        weightSize      = (TextView) view.findViewById(R.id.WeightSize);
-        percentageSize  = (TextView) view.findViewById(R.id.PercentageSize);
-        setSize         = (TextView) view.findViewById(R.id.SetSize);
-        gasSize         = (TextView) view.findViewById(R.id.readGasSize);
-        updateTime      = (TextView) view.findViewById(R.id.lastUpdateRow);
-        minus           = (ImageView) view.findViewById(R.id.minus);
-        plus            = (ImageView) view.findViewById(R.id.plus);
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction( "jsonReceived" );
+        getActivity().registerReceiver(broadcastReceiver, filter);
 
 
-        String appCode = utils.readFromFile(getContext());
-        Log.i("APPCODE","appcode: "+appCode);
+        weightSize = (TextView) view.findViewById(R.id.WeightSize);
+        percentageSize = (TextView) view.findViewById(R.id.PercentageSize);
+        setSize = (TextView) view.findViewById(R.id.SetSize);
+        gasSize = (TextView) view.findViewById(R.id.readGasSize);
+        updateTime = (TextView) view.findViewById(R.id.lastUpdateRow);
+        minus = (ImageView) view.findViewById(R.id.minus);
+        plus = (ImageView) view.findViewById(R.id.plus);
 
-        //MQTT CONNECTION
-        mqttAndroidClient = new MqttAndroidClient(getContext(), serverUri, appCode.trim(), Ack.AUTO_ACK);
 
-        MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
-        mqttConnectOptions.setAutomaticReconnect(true);
-        mqttConnectOptions.setCleanSession(false);
+        appCode = utils.readFromFile(getContext());
+        Log.i("APPCODE", "appcode: " + appCode);
 
-        try
-        {
-            mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener()
-            {
 
-                @Override
-                public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.i("Main","Connected correctly");
-                    subscribeTopic (appCode.trim());
-                }
-
-                @Override
-                public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                    exception.printStackTrace();
-                }
-            });
-        }
-        catch (Exception e)
-        {
-            Log.d("ERR", "Errore MQTT connect:" +e);
-        }
 
 
         minus.setOnClickListener(new View.OnClickListener() {
@@ -173,63 +159,19 @@ public class SecondFragment extends Fragment {
     }
 
 
-    public void subscribeTopic(String topic) {
-        try {
-            if (mqttAndroidClient.isConnected()) {
-                mqttAndroidClient.subscribe(topic, 0, null, new IMqttActionListener() {
-                    @Override
-                    public void onSuccess(IMqttToken asyncActionToken) {
-                        Log.i("MQTTSUB", "subscribed succeed");
-                        if (mqttAndroidClient.isConnected()) {
-                            receiveMqttMessages();
-                        }
-                    }
 
-                    @Override
-                    public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-                        Log.i("MQTTSUB", "subscribed failed");
-                    }
-                });
-            }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void receiveMqttMessages()
+    public void updateGraphicInformation(GasData gasData)
     {
-        mqttAndroidClient.setCallback(new MqttCallback() {
-            @Override
-            public void connectionLost(Throwable cause) {
 
-            }
+        weightSize.setText(gasData.getWeight().toString());
+        percentageSize.setText(gasData.getPercentage().toString());
+        //From Epoch to time
+        Date receivedDate = new Date(Long.parseLong(gasData.getTime()) * 1000);
+        Date correctDate = DateUtils.addHours(receivedDate, -1);
+        updateTime.setText(sdf.format(correctDate));
+        setSize.setText(gasData.getSettedSize().toString());
 
-            @Override
-            public void messageArrived(String topic, MqttMessage message) {
-                try {
-                    String arrivedMessage = message.toString();
-                    Log.i("MQTT", "received message: " + arrivedMessage);
-                    gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
-                    weightSize.setText(gasData.getWeight().toString());
-                    percentageSize.setText(gasData.getPercentage().toString());
-                    //From Epoch to time
-                    Date receivedDate = new Date(Long.parseLong(gasData.getTime())*1000);
-                    Date correctDate  = DateUtils.addHours(receivedDate, -1);
-                    updateTime.setText(sdf.format(correctDate));
-                    setSize.setText(gasData.getSettedSize().toString());
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void deliveryComplete(IMqttDeliveryToken token) {
-
-            }
-        });
     }
 
 
@@ -237,10 +179,10 @@ public class SecondFragment extends Fragment {
 
         String previousGasSize = gasSize.getText().toString();
         Integer previousGasSizeInt = Integer.parseInt(previousGasSize);
-        if (previousGasSizeInt >5) {
+        if (previousGasSizeInt > 5) {
             String newGasSize = String.valueOf(previousGasSizeInt - 5);
             gasSize.setText(newGasSize);
-            publishMessage(newGasSize, Utils.TOPIC_SET_BOTTLE_SIZE);
+            publishMessage(newGasSize, appCode.trim());
         }
     }
 
@@ -250,22 +192,37 @@ public class SecondFragment extends Fragment {
         if (previousGasSizeInt < 20) {
             String newGasSize = String.valueOf(previousGasSizeInt + 5);
             gasSize.setText(newGasSize);
-            publishMessage(newGasSize, Utils.TOPIC_SET_BOTTLE_SIZE);
+            publishMessage(newGasSize, appCode.trim());
         }
     }
 
 
     private void publishMessage(String message, String topic) {
-        try{
+        try {
             MqttMessage mqttMessage = new MqttMessage();
             mqttMessage.setId(1);
             mqttMessage.setPayload(message.getBytes(StandardCharsets.UTF_8));
             mqttMessage.setQos(0);
             mqttMessage.setRetained(true);
-            mqttAndroidClient.publish(topic, mqttMessage);
+            mqttAndroidClient.publish("bs" + topic, mqttMessage);
         } catch (Exception e) {
-            Log.e("MQTT", "Error publishing message: "+e);
+            Log.e("MQTT", "Error publishing message: " + e);
         }
     }
+
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(intent.getAction().equals("jsonReceived")) {
+                String arrivedMessage = intent.getStringExtra("json");
+                GasData gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
+                updateGraphicInformation(gasData);
+            }
+        }
+    };
+
+
 
 }

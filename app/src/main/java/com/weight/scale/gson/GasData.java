@@ -5,36 +5,36 @@ package com.weight.scale.gson;
  */
 public class GasData {
 
-    Integer weight;
-    Integer percentage;
-    Integer settedSize;
+    Float weight;
+    Float percentage;
+    Float settedSize;
     String  time;
 
     public GasData() {
         //Empty constructor
     }
 
-    public Integer getWeight() {
+    public Float getWeight() {
         return weight;
     }
 
-    public void setWeight(Integer weight) {
+    public void setWeight(Float weight) {
         this.weight = weight;
     }
 
-    public Integer getPercentage() {
+    public Float getPercentage() {
         return percentage;
     }
 
-    public void setPercentage(Integer percentage) {
+    public void setPercentage(Float percentage) {
         this.percentage = percentage;
     }
 
-    public Integer getSettedSize() {
+    public Float getSettedSize() {
         return settedSize;
     }
 
-    public void setSettedSize(Integer settedSize) {
+    public void setSettedSize(Float settedSize) {
         this.settedSize = settedSize;
     }
 

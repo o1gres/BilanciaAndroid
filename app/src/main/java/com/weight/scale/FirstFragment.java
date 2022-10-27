@@ -89,7 +89,7 @@ public class FirstFragment extends Fragment {
                     @Override
                     public void onComplete(@NonNull Task<String> task) {
                         if (!task.isSuccessful()) {
-                            Log.w("FIREBASE", "FCM registration token failed", task.getException());
+                            Log.w("FIREBASE", "Fetching FCM registration token failed", task.getException());
                             return;
                         }
 
@@ -97,14 +97,13 @@ public class FirstFragment extends Fragment {
                         String token = task.getResult();
 
                         // Log and toast
-                        //String msg = getString(R.string.msg_token_fmt, token);
                         Log.d("FIREBASE", token);
-                        Toast.makeText(getContext(), token, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), token, Toast.LENGTH_SHORT).show();
                     }
-
-
                 });
+
     }
+
 
     @Override
     public void onDestroyView() {
