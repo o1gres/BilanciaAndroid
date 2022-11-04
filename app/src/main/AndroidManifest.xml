@@ -5,11 +5,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/bombola"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/bombola"
         android:supportsRtl="true"
         android:theme="@style/Theme.Scale">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -22,13 +23,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Firebase -->
-        <service android:name=".FireIDService">
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
 
         <service android:name="com.weight.scale.NotificationService">
 

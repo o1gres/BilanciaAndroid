@@ -4,8 +4,12 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
@@ -27,6 +31,7 @@ import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import info.mqtt.android.service.Ack;
@@ -73,6 +78,18 @@ public class NotificationService extends Service {
         //MQTT CONNECTION
         appCode = utils.readFromFile(context);
 
+        if (null != appCode) {
+            connectToMqtt(context);
+        }
+
+    }
+
+    public void connectToMqtt(Context context)
+    {
+        if (null == appCode)
+        {
+            appCode = utils.readFromFile(context);
+        }
         mqttAndroidClient = new MqttAndroidClient(context, serverUri, appCode.trim(), Ack.AUTO_ACK);
 
         MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
@@ -80,6 +97,10 @@ public class NotificationService extends Service {
         mqttConnectOptions.setCleanSession(false);
         mqttConnectOptions.setUserName(Utils.MQTT_USERNAME);
         mqttConnectOptions.setPassword(Utils.MQTT_PASSWORD.toCharArray());
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction( "publishNewSize" );
+        context.registerReceiver(broadcastReceiver, filter);
 
         try {
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
@@ -100,11 +121,11 @@ public class NotificationService extends Service {
         }
     }
 
-    public static void generatePushNotification()
+    public static void generatePushNotification(Float percentage)
     {
-        String CHANNEL_ID="my_channel_id";
-        String channel_name="channel_name";
-        String channel_description="channel_description";
+        String CHANNEL_ID="bombola_id";
+        String channel_name="bombola_channel_name";
+        String channel_description="bombola_channel_description";
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
                     channel_name,
@@ -112,12 +133,22 @@ public class NotificationService extends Service {
             channel.setDescription(channel_description);
             notificationManager.createNotificationChannel(channel);
         }
+        /*
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.star_on)
+                .setSmallIcon(R.drawable.bombola)
+                .setLargeIcon(BitmapFactory. decodeResource (Resources.getSystem() , R.drawable.bombola))
                 .setContentTitle("Bombola in esaurimento")
-                .setContentText("Attento la bombola è al 15%")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        notificationManager.notify(0, builder.build());
+                .setContentText("Attenzione la bombola è al "+percentage+"%")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);*/
+
+        Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.bombola16)
+                .setContentTitle("Bombola in esaurimento")
+                .setContentText("Attenzione la bombola è al "+percentage+"%")
+                .setStyle(new NotificationCompat.BigPictureStyle()
+                        .bigPicture(BitmapFactory. decodeResource (Resources.getSystem() , R.drawable.bombola)))
+                .build();
+        notificationManager.notify(0, notification);
     }
 
 
@@ -167,6 +198,7 @@ public class NotificationService extends Service {
         startForeground(2, notification);
     }
 
+
     public void receiveMqttMessages() {
         mqttAndroidClient.setCallback(new MqttCallback() {
             @Override
@@ -180,14 +212,15 @@ public class NotificationService extends Service {
                     String arrivedMessage = message.toString();
                     Log.i("MQTT", "received message: " + arrivedMessage);
 
-                    NotificationService.generatePushNotification();
-
-
+                    GasData gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
+                    if (gasData.getPercentage()<=15.0) {
+                        NotificationService.generatePushNotification(gasData.getPercentage());
+                    }
 
                     Intent i = new Intent();
                     i.setAction("jsonReceived");
                     i.putExtra("json", arrivedMessage.trim());
-                    sendBroadcast(i);
+                    context.sendBroadcast(i);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -201,9 +234,36 @@ public class NotificationService extends Service {
         });
     }
 
+
+    public void publishMessage(String message, String topic) {
+        try {
+            MqttMessage mqttMessage = new MqttMessage();
+            mqttMessage.setId(1);
+            mqttMessage.setPayload(message.getBytes(StandardCharsets.UTF_8));
+            mqttMessage.setQos(0);
+            mqttMessage.setRetained(true);
+            mqttAndroidClient.publish("bs" + topic, mqttMessage);
+        } catch (Exception e) {
+            Log.e("MQTT", "Error publishing message: " + e);
+        }
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(intent.getAction().equals("publishNewSize")) {
+                String topic = intent.getStringExtra("topic");
+                String message = intent.getStringExtra("newSize");
+                publishMessage(message, topic);
+            }
+        }
+    };
 }
