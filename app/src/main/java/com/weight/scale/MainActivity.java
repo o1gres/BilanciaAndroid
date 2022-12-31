@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.i("BOM","Main activity on create");
         startService(new Intent(this, NotificationService.class));
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());

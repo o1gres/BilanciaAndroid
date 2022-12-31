@@ -36,10 +36,11 @@ public class FirstFragment extends Fragment {
 
     EditText edittext_scale_code;
 
-    Button firebase;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        Log.i("BOM","First Fragment onCreateView");
 
         binding = FragmentFirstBinding.inflate(inflater, container, false);
 
@@ -49,8 +50,7 @@ public class FirstFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        firebase = (Button) view.findViewById(R.id.firebase);
-
+        Log.i("BOM","First Fragment onViewCreated");
         edittext_scale_code = (EditText) view.findViewById(R.id.edittext_scale_code);
 
         binding.buttonFirst.setOnClickListener(new View.OnClickListener() {
@@ -65,13 +65,6 @@ public class FirstFragment extends Fragment {
         });
 
 
-        firebase.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ciao();
-            }
-        });
-
         if (null != utils.readFromFile(getContext()))
         {
             Log.i("FRAG1","Show frag 2");
@@ -82,32 +75,13 @@ public class FirstFragment extends Fragment {
     }
 
 
-    public void ciao()
-    {
-        FirebaseMessaging.getInstance().getToken()
-                .addOnCompleteListener(new OnCompleteListener<String>() {
-                    @Override
-                    public void onComplete(@NonNull Task<String> task) {
-                        if (!task.isSuccessful()) {
-                            Log.w("FIREBASE", "Fetching FCM registration token failed", task.getException());
-                            return;
-                        }
-
-                        // Get new FCM registration token
-                        String token = task.getResult();
-
-                        // Log and toast
-                        Log.d("FIREBASE", token);
-                        Toast.makeText(getContext(), token, Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-    }
 
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        Log.i("BOM","First Fragment onDestroyView");
+
         binding = null;
     }
 

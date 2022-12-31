@@ -59,8 +59,25 @@ public class NotificationService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i("BOM", "Notification Service onDestroy");
+
+        try {
+            Log.i("BOM", "Notification Service onDestroy pre disconnect");
+            mqttAndroidClient.disconnect();
+            Log.i("BOM", "Notification Service onDestroy after disconnect");
+        } catch (Exception e)
+        {
+            Log.i("BOM", "Notification Service onDestroy exception: "+e);
+        }
+
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
+        Log.i("BOM", "Notification Service onCreate");
 
         context = getApplicationContext();
 
@@ -86,6 +103,7 @@ public class NotificationService extends Service {
 
     public void connectToMqtt(Context context)
     {
+        Log.i("BOM", "Notification Service connectToMqtt");
         if (null == appCode)
         {
             appCode = utils.readFromFile(context);
@@ -103,17 +121,20 @@ public class NotificationService extends Service {
         context.registerReceiver(broadcastReceiver, filter);
 
         try {
+            //mqttAndroidClient.disconnect();
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
 
                 @Override
                 public void onSuccess(IMqttToken asyncActionToken) {
-                    Log.i("Main", "Connected correctly");
+                    Log.i("BOM", "Notification Service MQTT Connected correctly");
                     subscribeTopic(appCode.trim());
                 }
 
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                     exception.printStackTrace();
+                    Log.i("BOM", "Notification Service MQTT onFailure");
+
                 }
             });
         } catch (Exception e) {
@@ -140,15 +161,16 @@ public class NotificationService extends Service {
                 .setContentTitle("Bombola in esaurimento")
                 .setContentText("Attenzione la bombola è al "+percentage+"%")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);*/
-
-        Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.bombola16)
-                .setContentTitle("Bombola in esaurimento")
-                .setContentText("Attenzione la bombola è al "+percentage+"%")
-                .setStyle(new NotificationCompat.BigPictureStyle()
-                        .bigPicture(BitmapFactory. decodeResource (Resources.getSystem() , R.drawable.bombola)))
-                .build();
-        notificationManager.notify(0, notification);
+        if (percentage >= 0.0) {
+            Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.bombola16)
+                    .setContentTitle("Bombola in esaurimento")
+                    .setContentText("Attenzione la bombola è al " + percentage + "%")
+                    .setStyle(new NotificationCompat.BigPictureStyle()
+                            .bigPicture(BitmapFactory.decodeResource(Resources.getSystem(), R.drawable.bombola)))
+                    .build();
+            notificationManager.notify(0, notification);
+        }
     }
 
 
@@ -266,4 +288,5 @@ public class NotificationService extends Service {
             }
         }
     };
+
 }

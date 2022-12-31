@@ -44,6 +44,8 @@ public class SecondFragment extends Fragment {
     Utils utils = new Utils();
     Gson gson = new Gson();
 
+    GasData globalGasData = new GasData();
+
     TextView weightSize;
     TextView percentageSize;
     TextView setSize;
@@ -61,6 +63,8 @@ public class SecondFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i("BOM","Second Fragment onCreate");
+
         setHasOptionsMenu(true);
 
     }
@@ -92,13 +96,23 @@ public class SecondFragment extends Fragment {
             LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 
-        binding = FragmentSecondBinding.inflate(inflater, container, false);
-        return binding.getRoot();
+            Log.i("BOM","Second Fragment onCreateView");
+
+            if(globalGasData != null && globalGasData.getPercentage() != null && globalGasData.getPercentage()>=0.0)
+            {
+                updateGraphicInformation(globalGasData);
+            }
+
+
+
+            binding = FragmentSecondBinding.inflate(inflater, container, false);
+            return binding.getRoot();
     }
 
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        Log.i("BOM","Second Fragment onViewCreated");
 
         IntentFilter filter = new IntentFilter();
         filter.addAction( "jsonReceived" );
@@ -137,22 +151,26 @@ public class SecondFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        Log.i("BOM","Second Fragment onDestroyView");
         binding = null;
     }
 
 
     public void updateGraphicInformation(GasData gasData)
     {
-        Integer lWeight = Math.round(gasData.getWeight());
-        weightSize.setText(lWeight.toString());
         Integer lPercentage = Math.round(gasData.getPercentage());
-        percentageSize.setText(lPercentage.toString());
-        //From Epoch to time
-        Date receivedDate = new Date(Long.parseLong(gasData.getTime()) * 1000);
-        Date correctDate = DateUtils.addHours(receivedDate, -1);
-        updateTime.setText(sdf.format(correctDate));
-        Integer lSize = Math.round(gasData.getSettedSize());
-        setSize.setText(lSize.toString());
+        if (lPercentage >= 0) {
+            percentageSize.setText(lPercentage.toString());
+            Integer lWeight = Math.round(gasData.getWeight());
+            weightSize.setText(lWeight.toString());
+            //From Epoch to time
+            Date receivedDate = new Date(Long.parseLong(gasData.getTime()) * 1000);
+            Date correctDate = DateUtils.addHours(receivedDate, -1);
+            updateTime.setText(sdf.format(correctDate));
+            Integer lSize = Math.round(gasData.getSettedSize());
+            setSize.setText(lSize.toString());
+            gasSize.setText(lSize.toString());
+        }
     }
 
 
@@ -196,7 +214,8 @@ public class SecondFragment extends Fragment {
             if(intent.getAction().equals("jsonReceived")) {
                 String arrivedMessage = intent.getStringExtra("json");
                 GasData gasData = gson.fromJson(arrivedMessage.trim(), GasData.class);
-                updateGraphicInformation(gasData);
+                globalGasData = gasData;
+                updateGraphicInformation(globalGasData);
             }
         }
     };
