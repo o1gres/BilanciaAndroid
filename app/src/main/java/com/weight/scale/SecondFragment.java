@@ -101,6 +101,8 @@ public class SecondFragment extends Fragment {
             if(globalGasData != null && globalGasData.getPercentage() != null && globalGasData.getPercentage()>=0.0)
             {
                 updateGraphicInformation(globalGasData);
+                Log.i("BOM","Second Fragment onCreateView updateGraphicInformation with last data");
+
             }
 
 
@@ -152,6 +154,10 @@ public class SecondFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         Log.i("BOM","Second Fragment onDestroyView");
+
+        NotificationService.getMqttAndroidClient().disconnect();
+        Log.i("BOM","Second Fragment onDestroyView disconnecting MQTT client");
+
         binding = null;
     }
 

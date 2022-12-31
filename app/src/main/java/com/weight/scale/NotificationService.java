@@ -29,6 +29,7 @@ import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.nio.charset.StandardCharsets;
@@ -50,8 +51,10 @@ public class NotificationService extends Service {
     GasData gasData = new GasData();
     //MQTT
     final String serverUri = "tcp://developerhome.ddns.net:1883";
-    MqttAndroidClient mqttAndroidClient;
+
+    static MqttAndroidClient mqttAndroidClient;
     String appCode;
+
 
     public NotificationService()
     {
@@ -121,7 +124,13 @@ public class NotificationService extends Service {
         context.registerReceiver(broadcastReceiver, filter);
 
         try {
-            //mqttAndroidClient.disconnect();
+            Log.i("BOM", "Disconnect Request: "+mqttAndroidClient);
+            if(mqttAndroidClient.isConnected() == true) {
+                mqttAndroidClient.disconnect();
+                Log.i("BOM", "Disconnect Request");
+            }
+
+
             mqttAndroidClient.connect(mqttConnectOptions, null, new IMqttActionListener() {
 
                 @Override
@@ -133,7 +142,8 @@ public class NotificationService extends Service {
                 @Override
                 public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                     exception.printStackTrace();
-                    Log.i("BOM", "Notification Service MQTT onFailure");
+                    Log.e("BOM", "Notification Service MQTT onFailure: "+exception);
+
 
                 }
             });
@@ -288,5 +298,9 @@ public class NotificationService extends Service {
             }
         }
     };
+
+    public static MqttAndroidClient getMqttAndroidClient() {
+        return mqttAndroidClient;
+    }
 
 }
